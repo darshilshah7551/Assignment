@@ -85,4 +85,7 @@ const users = [
     const { password, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
     });
+    
+    
+
 app.listen(3000, () => console.log("Example app listening on port 3000!"));
