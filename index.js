@@ -2,9 +2,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const app = express();
-require('dotenv').config();
 const db = require("./app.js");
-app.get("/", (req, res) => res.send("Hello World!"));
 app.use(express.json());
 
 
@@ -13,7 +11,7 @@ const SECRET_KEY = "mysecretkey";
 const activeTokens = new Map();
 const users = [
   { email: "user@example.com", password: "securepassword",id:1, name:"user1" },
-  { email: "use1r@example.com", password: "securepassword",id:2, name:"user2" },
+  { email: "user1@example.com", password: "securepassword",id:2, name:"user2" },
   { email: "user2@example.com", password: "securepassword",id:3, name:"user3" },
   { email: "user3@example.com", password: "securepassword" ,id:4, name:"user4"},
   { email: "user4@example.com", password: "securepassword",id:5, name:"user5" },
@@ -61,7 +59,7 @@ const users = [
     return res.status(401).json({ message: 'Invalid credentials' });
     }
     
-    const token = jwt.sign({ email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ email: user.email }, SECRET_KEY);
     
     activeTokens.set(user.email, token);
     
@@ -71,6 +69,8 @@ const users = [
 
 
     //   Logout-------------------------------------------------------------------------------------------------------
+
+    
     app.post('/api/auth/logout', authenticateToken, (req, res) => {
     const userEmail = req.user.email;
     

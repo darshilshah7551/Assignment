@@ -46,6 +46,7 @@ app.get('/api/properties', (req, res) => {
         properties: paginatedProperties
     });
 });
+
 app.get('/api/properties/search', (req, res) => {
     const { query } = req.query;
 console.log(query);
@@ -91,25 +92,6 @@ app.put('/api/properties/:id', (req, res) => {
 
 
 
-app.get('/api/dashboard/summary', (req, res) => {
-    const totalProperties = properties.length;
-    const availableProperties = properties.filter(property => property.website.toLowerCase() === 'available').length;
-    const unavailableProperties = totalProperties - availableProperties;
-    const Condo = properties.filter(property => property.category.toLowerCase() === 'condo').length;
-    const ApartmentComplex = totalProperties - Condo;
-
-    const issues = properties.filter(property => !property.name || !property.address || !property.phone || !property.category || !property.website);
-
-    res.json({
-        totalProperties,
-        availableProperties,
-        unavailableProperties,
-        ApartmentComplex,
-        Condo,
-        propertiesWithIssues: issues.length,
-        issues
-    });
-});
 app.get('/api/properties/issues', (req, res) => {
     const issues = properties.map(property => {
         const issuesList = [];
@@ -145,4 +127,23 @@ app.get('/api/properties/issues', (req, res) => {
 });
 
 
+app.get('/api/dashboard/summary', (req, res) => {
+    const totalProperties = properties.length;
+    const availableProperties = properties.filter(property => property.website.toLowerCase() === 'available').length;
+    const unavailableProperties = totalProperties - availableProperties;
+    const Condo = properties.filter(property => property.category.toLowerCase() === 'condo').length;
+    const ApartmentComplex = totalProperties - Condo;
+
+    const issues = properties.filter(property => !property.name || !property.address || !property.phone || !property.category || !property.website);
+
+    res.json({
+        totalProperties,
+        availableProperties,
+        unavailableProperties,
+        ApartmentComplex,
+        Condo,
+        propertiesWithIssues: issues.length,
+        issues
+    });
+});
 app.listen(3000, () => console.log("Example app listening on port 3000!"));
