@@ -2,9 +2,13 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const app = express();
-
+require('dotenv').config();
+const db = require("./app.js");
 app.get("/", (req, res) => res.send("Hello World!"));
 app.use(express.json());
+
+
+
 const SECRET_KEY = "mysecretkey";
 const activeTokens = new Map();
 const users = [
@@ -44,12 +48,14 @@ const users = [
     next();
     });
     }
-    
-    // LOGIN
+
+
+    //   Login-------------------------------------------------------------------------------------------------------
+     
     app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
-    
-    const user = users.find(u => u.email === email && u.password === password);
+    const user = db.getCollection("users")(u => u.email === email && u.password === password);
+    console.log("User:", user);
     
     if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' });
@@ -61,8 +67,10 @@ const users = [
     
     res.json({ token });
     });
-    
-    // LOGOUT
+
+
+
+    //   Logout-------------------------------------------------------------------------------------------------------
     app.post('/api/auth/logout', authenticateToken, (req, res) => {
     const userEmail = req.user.email;
     
@@ -74,7 +82,7 @@ const users = [
     res.status(400).json({ message: 'User not logged in' });
     });
     
-    // GET Authenticated User Info
+    //  Authenticated User Info -----------------------------------------------------------------------------------------------
     app.get('/api/users/me', authenticateToken, (req, res) => {
     const user = users.find(u => u.email === req.user.email);
     
