@@ -1,23 +1,18 @@
-const { MongoClient } = require("mongodb");
+// app.js
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-// Replace the uri string with your connection string.
-const uri = "mongodb+srv://darshilshah7551:darshil@user.bxcrkji.mongodb.net/?retryWrites=true&w=majority&appName=User";
-
-const client = new MongoClient(uri);
-
-async function run() {
+const connectDB = async () => {
   try {
-    const database = client.db('sample_mflix');
-    const movies = database.collection('users');
-
-    // Query for a movie that has the title 'Back to the Future'
-    const query = { name: 'Ned Stark' };
-    const movie = await movies.findOne(query);
-
-    console.log(movie);
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log("MongoDB connected");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+    process.exit(1);
   }
-}
-run().catch(console.dir);
+};
+
+module.exports = connectDB;
