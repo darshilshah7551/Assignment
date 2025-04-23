@@ -1,4 +1,15 @@
 const Property = require('../models/property');
+const mongoose = require('mongoose');
+
+const UserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  token: { type: String },
+}, {
+  timestamps: true, // Automatically add createdAt and updatedAt fields
+});
+
 
 // Get all properties
 const getProperties = async (req, res) => {
@@ -82,10 +93,73 @@ const updateProperty = async (req, res) => {
     res.status(500).json({ message: 'Error updating property', error: err.message });
   }
 };
+const getPropertyIssues = async (req, res) => {
+  try {
+    const issues = await Property.aggregate([
+      {
+        $project: {
+          name: 1,
+          address: 1,
+          phone: 1,
+          category: 1,
+          website: 1,
+          issues: {
+            $setUnion: [
+              { $cond: [{ $eq: ["$name", ""] }, ["No Name"], []] },
+              { $cond: [{ $eq: ["$address", ""] }, ["No Address"], []] },
+              { $cond: [{ $eq: ["$phone", ""] }, ["No Phone"], []] },
+              { $cond: [{ $eq: ["$category", ""] }, ["No Category"], []] },
+              { $cond: [{ $eq: ["$website", ""] }, ["No Website"], []] }
+            ]
+          }
+        }
+      }
+    ]);
+
+    res.json(issues);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching issues', error: err.message });
+  }
+};
+
+// Dashboard summary data
+const getDashboardSummary = async (req, res) => {
+  try {
+    const totalProperties = await Property.countDocuments();
+    const availableProperties = await Property.countDocuments({ website: "Available" });
+    const unavailableProperties = totalProperties - availableProperties;
+    const condoCount = await Property.countDocuments({ category: "Condo" });
+    const apartmentComplexCount = totalProperties - condoCount;
+    const propertiesWithIssues = await Property.countDocuments({
+      $or: [
+        { name: "" },
+        { address: "" },
+        { phone: "" },
+        { category: "" },
+        { website: "" }
+      ]
+    });
+
+    res.json({
+      totalProperties,
+      availableProperties,
+      unavailableProperties,
+      apartmentComplexCount,
+      condoCount,
+      propertiesWithIssues
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching dashboard summary', error: err.message });
+  }
+};
 
 module.exports = {
   getProperties,
   searchProperties,
   createProperty,
   updateProperty,
+  getPropertyIssues,
+  getDashboardSummary
 };

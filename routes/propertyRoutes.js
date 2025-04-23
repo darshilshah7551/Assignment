@@ -1,11 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const propertyController = require('../controllers/propertyController');
+const {
+  getProperties,
+  searchProperties,
+  createProperty,
+  updateProperty,
+  getPropertyIssues,
+  getDashboardSummary
+} = require('../controllers/propertyController');
 
-// Property routes
-router.get('/properties', propertyController.getProperties);
-router.get('/properties/search', propertyController.searchProperties);
-router.post('/properties', propertyController.createProperty);
-router.put('/properties/:id', propertyController.updateProperty);
+router.get('/properties', getProperties);
+router.get('/search', searchProperties);
+router.post('/properties', createProperty);
+router.put('/:id', updateProperty);
+router.get('/issues', getPropertyIssues);
+router.get('/dashboard/summary', getDashboardSummary);
 
 module.exports = router;
