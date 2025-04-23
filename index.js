@@ -5,17 +5,18 @@ const connectDB = require('./app.js');
 const User = require('./User');
 
 const app = express();
-
 app.use(express.json());
 
+// Connect to MongoDB
 connectDB();
 
+// Secret key for JWT
 const SECRET_KEY = process.env.JWT_SECRET;
 
+// Basic root route
 app.get("/", (req, res) => res.send("Hello World!"));
 
-const activeTokens = new Map();
-
+// 🔐 Middleware to check token
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
 
@@ -24,7 +25,6 @@ function authenticateToken(req, res, next) {
     }
 
     const parts = authHeader.trim().split(' ');
-
     if (parts.length !== 2) {
         return res.status(401).json({ message: 'Invalid authorization header format' });
     }
@@ -58,22 +58,26 @@ function authenticateToken(req, res, next) {
     });
 }
 
+// 🔐 POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
+        // Authenticate using plain-text password (as per your request)
         const user = await User.findOne({ email, password });
 
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Generate JWT
         const token = jwt.sign({ email }, SECRET_KEY, { expiresIn: '1h' });
 
+        // Save token to user record
         user.token = token;
-
         await user.save();
 
+        // Return token
         res.json({ token });
     } catch (err) {
         console.error("Error logging in:", err);
@@ -81,6 +85,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// 🔐 POST /api/auth/logout
 app.post('/api/auth/logout', authenticateToken, async (req, res) => {
     const userEmail = req.user.email;
 
@@ -91,17 +96,18 @@ app.post('/api/auth/logout', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        // Invalidate token
         user.token = null;
-
         await user.save();
 
-        res.json({ message: 'Logged out successfully' });
+        res.json({ message: 'Successfully logged out' });
     } catch (err) {
         console.error("Error logging out user:", err);
         res.status(500).json({ message: 'Error logging out', error: err.message });
     }
 });
 
+// 🔐 GET /api/users/me
 app.get('/api/users/me', authenticateToken, async (req, res) => {
     try {
         const user = await User.findOne({ email: req.user.email });
@@ -110,13 +116,17 @@ app.get('/api/users/me', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const { password, ...userWithoutPassword } = user.toObject();
-
-        res.json(userWithoutPassword);
+        // Return limited user info (excluding password and token)
+        res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email
+        });
     } catch (err) {
         console.error("Error fetching user:", err);
         res.status(500).json({ message: 'Error fetching user data', error: err.message });
     }
 });
 
-app.listen(3000, () => console.log("Example app listening on port 3000!"));
+// Start the server
+app.listen(3000, () => console.log("App listening on port 3000!"));
